@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m venv esl-backend/venv)",
+      "Bash(source venv/Scripts/activate)",
+      "Bash(pip install:*)",
+      "Bash(django-admin startproject:*)",
+      "Bash(python manage.py startapp accounts)",
+      "Bash(python manage.py startapp branches)",
+      "Bash(python manage.py makemigrations)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(d:/esl-management-excel-system/esl-frontend/vite.config.js:*)",
+      "Bash(python manage.py startapp products)",
+      "Bash(python manage.py makemigrations products)",
+      "Bash(python manage.py migrate)",
+      "Bash(python manage.py startapp brands)",
+      "Bash(python manage.py makemigrations brands)",
+      "Bash(python manage.py shell -c \":*)",
+      "Bash(python manage.py startapp categories)",
+      "Bash(python manage.py makemigrations categories)",
+      "Bash(python manage.py seed_usp_categories)",
+      "Bash(python manage.py check)",
+      "Bash(pip show:*)",
+      "Bash(npm run:*)",
+      "Bash(npx vite:*)",
+      "Bash(python manage.py startapp planogram)",
+      "Bash(python manage.py makemigrations planogram)",
+      "Bash(python -c \"from planogram.views import ESLDeviceBindProductView, ESLTemplateListView; print\\(''''OK''''\\)\")",
+      "Bash(python -m py_compile planogram/views.py planogram/serializers.py planogram/urls.py)",
+      "Bash(node -e \"const dg = require\\(''''@mui/x-data-grid''''\\); console.log\\(Object.keys\\(dg\\).filter\\(k => k.includes\\(''''Selection''''\\) || k.includes\\(''''selection''''\\)\\)\\)\")",
+      "Bash(python manage.py makemigrations planogram --name=add_variant_count_to_esltemplate)",
+      "Bash(python manage.py migrate planogram)"
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DB_NAME:-esl_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./esl-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-change-me-in-production}
+      DEBUG: ${DEBUG:-False}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      DB_NAME: ${DB_NAME:-esl_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_HOST: db
+      DB_PORT: 5432
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+    volumes:
+      - static_files:/app/staticfiles
+    ports:
+      - "8888:8000"
+
+  frontend:
+    build:
+      context: ./esl-frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8888/api}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8081:80"
+
+volumes:
+  postgres_data:
+  static_files:
