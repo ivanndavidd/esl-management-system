@@ -1,6 +1,7 @@
 from pathlib import Path
 from decouple import config
 from datetime import timedelta
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -90,7 +91,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS
-_cors_origins = config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173,http://127.0.0.1:5173,http://localhost:80,http://localhost')
+_cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS', config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173,http://127.0.0.1:5173,http://localhost:80,http://localhost'))
 CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(',')]
 CORS_ALLOW_CREDENTIALS = True
 
