@@ -22,8 +22,11 @@ const MAX_VARIANTS = 5
 
 const formatStorage = (val) => {
   if (!val) return null
-  const n = parseInt(val)
-  if (isNaN(n)) return val
+  const s = String(val).trim()
+  // If value already contains a unit, ensure space between number and unit
+  if (/[a-zA-Z]/.test(s)) return s.replace(/(\d)([a-zA-Z])/, '$1 $2')
+  const n = parseInt(s)
+  if (isNaN(n)) return s
   if (n >= 1000) return `${n / 1000} TB`
   return `${n} GB`
 }

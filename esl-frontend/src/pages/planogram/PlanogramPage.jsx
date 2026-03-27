@@ -537,8 +537,10 @@ function ESLDeviceView({ site, segment, onBack }) {
     const MAX_VAR = 5
     const formatStorage = (val) => {
       if (!val) return ''
-      const n = parseInt(val)
-      if (isNaN(n)) return val
+      const s = String(val).trim()
+      if (/[a-zA-Z]/.test(s)) return s.replace(/(\d)([a-zA-Z])/, '$1 $2')
+      const n = parseInt(s)
+      if (isNaN(n)) return s
       return n >= 1000 ? `${n / 1000} TB` : `${n} GB`
     }
 
