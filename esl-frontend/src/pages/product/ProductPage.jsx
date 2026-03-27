@@ -7,7 +7,7 @@ import {
   FormControl, InputLabel, Tabs, Tab
 } from '@mui/material'
 import {
-  Add, Upload, Search, Refresh, Close, CheckCircle, Download, Edit
+  Add, Upload, Search, Refresh, Close, CheckCircle, Download, Edit, Delete
 } from '@mui/icons-material'
 import { DataGrid } from '@mui/x-data-grid'
 import api from '../../api/axios'
@@ -245,6 +245,7 @@ export default function ProductPage() {
   const [importOpen, setImportOpen] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [editDialog, setEditDialog] = useState({ open: false, productId: null })
+  const [deleting, setDeleting] = useState(false)
   // selectedIds: Set of numeric IDs — persists across search changes
   const [selectedIds, setSelectedIds] = useState(new Set())
   const productType = tab === 0 ? 'demo' : 'accessory'
@@ -270,13 +271,12 @@ export default function ProductPage() {
         if (search) params.set('search', search)
         if (brandFilter) params.set('brand', brandFilter)
       }
-      const token = localStorage.getItem('access_token')
       const endpoint = tab === 0 ? 'demo' : 'accessories'
       const filename = tab === 0 ? 'esl_demo_export.xlsx' : 'esl_accessories_export.xlsx'
-      const url = `http://localhost:8000/api/products/export/${endpoint}/?${params.toString()}`
-      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-      if (!res.ok) throw new Error('Export gagal')
-      const blob = await res.blob()
+      const res = await api.get(`/products/export/${endpoint}/?${params.toString()}`, {
+        responseType: 'blob',
+      })
+      const blob = res.data
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
       a.download = filename
@@ -287,6 +287,21 @@ export default function ProductPage() {
       toast.error('Export gagal.')
     } finally {
       setExporting(false)
+    }
+  }
+
+  const handleBatchDelete = async () => {
+    if (!window.confirm(`Hapus ${selectedIds.size} produk yang dipilih? Tindakan ini tidak bisa dibatalkan.`)) return
+    setDeleting(true)
+    try {
+      const { data } = await api.delete('/products/batch/delete/', { data: { ids: [...selectedIds] } })
+      toast.success(`${data.deleted} produk berhasil dihapus.`)
+      setSelectedIds(new Set())
+      fetchProducts()
+    } catch {
+      toast.error('Gagal menghapus produk.')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -410,6 +425,12 @@ export default function ProductPage() {
             label={`${selectedIds.size} item dipilih`}
             color="primary" size="small" sx={{ fontWeight: 600 }}
           />
+          <Button size="small" variant="contained" color="error"
+            startIcon={deleting ? <CircularProgress size={12} color="inherit" /> : <Delete fontSize="small" />}
+            onClick={handleBatchDelete} disabled={deleting}
+            sx={{ fontWeight: 600, fontSize: 12 }}>
+            {deleting ? 'Menghapus...' : `Hapus ${selectedIds.size} Produk`}
+          </Button>
           <Button size="small" color="inherit" onClick={() => setSelectedIds(new Set())}
             sx={{ fontSize: 12, textDecoration: 'underline', p: 0, minWidth: 0 }}>
             Batalkan pilihan

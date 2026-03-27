@@ -39,6 +39,17 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
 
+class ProductBatchDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        ids = request.data.get('ids', [])
+        if not ids:
+            return Response({'detail': 'ids wajib diisi.'}, status=status.HTTP_400_BAD_REQUEST)
+        deleted, _ = Product.objects.filter(id__in=ids).delete()
+        return Response({'deleted': deleted})
+
+
 class ProductVariantDetailView(generics.RetrieveUpdateAPIView):
     queryset = ProductVariant.objects.all()
     serializer_class = ProductVariantSerializer
@@ -263,7 +274,7 @@ class ExportAccessoriesItemView(APIView):
             image_url = brand_logos.get(p.brand.lower(), '')
 
             ws.append([
-                p.product_id,       # Barcode
+                str(p.product_id),  # Barcode
                 p.commercial_name,  # Product name
                 p.colour,           # Specification
                 srp,                # Price (SRP)
@@ -277,6 +288,8 @@ class ExportAccessoriesItemView(APIView):
                 '', '',             # Customize 19-20
                 '', '', '', '', '', # Customize 21-25
             ])
+            # Force Barcode cell to Text format so numeric-looking IDs don't become scientific notation
+            ws.cell(row=ws.max_row, column=1).number_format = '@'
 
         output = io.BytesIO()
         wb.save(output)

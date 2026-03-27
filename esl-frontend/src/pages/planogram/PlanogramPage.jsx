@@ -518,17 +518,51 @@ function ESLDeviceView({ site, segment, onBack }) {
   })
 
   const handleExport = () => {
-    const rows = devices.map(d => ({
-      Code: d.code,
-      Barcode: d.barcode || '',
-      Templates: d.template || '',
-      Ap: d.ap || '',
-      Desc: d.desc || '',
-    }))
+    const rows = devices.length > 0
+      ? devices.map(d => ({
+          Code: d.code,
+          Barcode: d.barcode || '',
+          Templates: d.template || '',
+          Ap: d.ap || '',
+          Desc: d.desc || '',
+        }))
+      : [{ Code: '', Barcode: '', Templates: '', Ap: '', Desc: '' }]
     const ws = XLSX.utils.json_to_sheet(rows)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'ESL Devices')
-    XLSX.writeFile(wb, `${segment.name} - ${site.name}.xlsx`)
+    XLSX.writeFile(wb, devices.length > 0 ? `${segment.name} - ${site.name}.xlsx` : 'template_esl_import.xlsx')
+  }
+
+  const handleExportProduct = () => {
+    const MAX_VAR = 5
+    const formatStorage = (val) => {
+      if (!val) return ''
+      const n = parseInt(val)
+      if (isNaN(n)) return val
+      return n >= 1000 ? `${n / 1000} TB` : `${n} GB`
+    }
+
+    const header = ['Code', 'Barcode', 'Nama Product']
+    for (let i = 1; i <= MAX_VAR; i++) header.push(`Varian ${i} RAM`, `Varian ${i} ROM`)
+
+    const dataRows = devices.map(d => {
+      const row = [
+        d.code,
+        d.barcode || '',
+        d.product_name || '',
+      ]
+      for (let i = 1; i <= MAX_VAR; i++) {
+        const v = (d.variants || []).find(v => v.variant_number === i)
+        row.push(v ? formatStorage(v.ram) : '')
+        row.push(v ? formatStorage(v.rom) : '')
+      }
+      return row
+    })
+
+    const ws = XLSX.utils.aoa_to_sheet([header, ...dataRows])
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Product Detail')
+    XLSX.writeFile(wb, `${segment.name} - ${site.name} - Product Detail.xlsx`)
   }
 
   return (
@@ -560,10 +594,16 @@ function ESLDeviceView({ site, segment, onBack }) {
             <input ref={fileInputRef} type="file" accept=".xlsx,.xls" hidden onChange={handleImport} />
             <Button variant="outlined" startIcon={<Download />}
               onClick={handleExport}
-              disabled={devices.length === 0}
               sx={{ fontWeight: 600, borderRadius: 2 }}>
-              Export Excel
+              {devices.length === 0 ? 'Download Template' : 'Export Excel'}
             </Button>
+            {devices.length > 0 && (
+              <Button variant="outlined" color="secondary" startIcon={<Download />}
+                onClick={handleExportProduct}
+                sx={{ fontWeight: 600, borderRadius: 2 }}>
+                Export Product Detail
+              </Button>
+            )}
             <Button variant="outlined" startIcon={importing ? <CircularProgress size={14} /> : <UploadFile />}
               onClick={() => fileInputRef.current?.click()}
               disabled={importing} sx={{ fontWeight: 600, borderRadius: 2 }}>

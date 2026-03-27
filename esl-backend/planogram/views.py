@@ -214,14 +214,26 @@ class ESLDeviceImportView(APIView):
                 errors.append(f'Baris {i}: Code wajib diisi.')
                 continue
 
+            barcode = get('Barcode').lstrip("'")  # strip leading apostrophe if present
+            template_val = get('Templates')
+
+            # Try to bind product by product_id matching barcode
+            product = None
+            if barcode:
+                product = Product.objects.filter(product_id=barcode).first()
+                # If product found and no template specified, auto-resolve template
+                if product and not template_val:
+                    template_val = resolve_template(product)
+
             device, was_created = ESLDevice.objects.update_or_create(
                 segment=segment,
                 code=code,
                 defaults={
-                    'barcode': get('Barcode'),
-                    'template': get('Templates'),
+                    'barcode': barcode,
+                    'template': template_val,
                     'ap': get('Ap'),
                     'desc': get('Desc'),
+                    'product': product,
                 }
             )
             if was_created:

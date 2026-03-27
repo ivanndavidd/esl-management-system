@@ -14,11 +14,12 @@ class ESLDeviceSerializer(serializers.ModelSerializer):
     product_name = serializers.SerializerMethodField()
     product_type = serializers.CharField(source='product.product_type', read_only=True, allow_null=True)
     variant_count = serializers.SerializerMethodField()
+    variants = serializers.SerializerMethodField()
 
     class Meta:
         model = ESLDevice
         fields = ['id', 'segment', 'product', 'product_id', 'product_name', 'product_type',
-                  'variant_count', 'code', 'barcode', 'template', 'ap', 'desc', 'created_at', 'updated_at']
+                  'variant_count', 'variants', 'code', 'barcode', 'template', 'ap', 'desc', 'created_at', 'updated_at']
         read_only_fields = ['segment', 'created_at', 'updated_at']
 
     def get_product_name(self, obj):
@@ -30,6 +31,14 @@ class ESLDeviceSerializer(serializers.ModelSerializer):
         if obj.product:
             return obj.product.variants.count()
         return None
+
+    def get_variants(self, obj):
+        if not obj.product:
+            return []
+        return [
+            {'variant_number': v.variant_number, 'ram': v.ram, 'rom': v.rom}
+            for v in obj.product.variants.all()
+        ]
 
 
 class LayoutSegmentSerializer(serializers.ModelSerializer):
